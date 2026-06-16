@@ -21,17 +21,22 @@ padding:20px;
 }
 
 h1{
-font-size:2.3rem;
-margin-bottom:10px;
+font-size:2.5rem;
 color:#ff0000;
+margin-bottom:10px;
+}
+
+.subtitle{
+color:#aaa;
+margin-bottom:20px;
 }
 
 .search-box{
-max-width:700px;
-margin:auto;
 background:#1e293b;
 padding:20px;
 border-radius:15px;
+max-width:700px;
+margin:auto;
 }
 
 .inputs{
@@ -52,13 +57,17 @@ button{
 width:100%;
 margin-top:10px;
 padding:12px;
-background:red;
-color:white;
 border:none;
 border-radius:8px;
+background:#ff0000;
+color:white;
 font-size:18px;
 font-weight:bold;
 cursor:pointer;
+}
+
+button:hover{
+background:#cc0000;
 }
 
 .battle{
@@ -72,17 +81,18 @@ margin-top:30px;
 
 .card{
 background:#1e293b;
+width:320px;
 padding:20px;
-width:300px;
 border-radius:15px;
 box-shadow:0 0 15px rgba(0,0,0,.4);
 }
 
 .avatar{
-width:100px;
-height:100px;
+width:120px;
+height:120px;
 border-radius:50%;
-border:3px solid red;
+border:4px solid red;
+object-fit:cover;
 margin-bottom:10px;
 }
 
@@ -92,20 +102,15 @@ margin-bottom:10px;
 }
 
 .count{
-font-size:40px;
+font-size:42px;
 font-weight:bold;
 color:#00ff99;
+font-family:monospace;
 }
 
-.vs{
-font-size:50px;
-font-weight:bold;
-color:gold;
-}
-
-.winner{
-font-size:35px;
-margin-top:10px;
+.crown{
+font-size:40px;
+height:50px;
 }
 
 .progress{
@@ -116,22 +121,34 @@ overflow:hidden;
 margin-top:15px;
 }
 
-.progress-bar{
+.bar{
 height:100%;
 width:50%;
 background:lime;
 }
+
+.vs{
+font-size:50px;
+font-weight:bold;
+color:gold;
+}
+
+@media(max-width:768px){
+.vs{
+width:100%;
+}
+}
 </style>
 </head>
-
 <body>
 
 <h1>🔥 Subscriber Battle</h1>
+<p class="subtitle">Enter Channel Names & Start Battle</p>
 
 <div class="search-box">
 <div class="inputs">
-<input type="text" id="name1Input" placeholder="Channel 1 Name">
-<input type="text" id="name2Input" placeholder="Channel 2 Name">
+<input type="text" id="name1Input" placeholder="Channel 1">
+<input type="text" id="name2Input" placeholder="Channel 2">
 </div>
 
 <button onclick="startBattle()">Start Battle ⚔️</button>
@@ -140,33 +157,41 @@ background:lime;
 <div class="battle">
 
 <div class="card">
-<img src="https://i.pravatar.cc/150?img=12" class="avatar">
+
+<img id="logo1"
+class="avatar"
+src="https://i.pravatar.cc/150?img=12">
 
 <div class="name" id="name1">Channel 1</div>
 
 <div class="count" id="count1">0</div>
 
-<div class="winner" id="crown1"></div>
+<div class="crown" id="crown1"></div>
 
 <div class="progress">
-<div class="progress-bar" id="bar1"></div>
+<div class="bar" id="bar1"></div>
 </div>
+
 </div>
 
 <div class="vs">VS</div>
 
 <div class="card">
-<img src="https://i.pravatar.cc/150?img=22" class="avatar">
+
+<img id="logo2"
+class="avatar"
+src="https://i.pravatar.cc/150?img=22">
 
 <div class="name" id="name2">Channel 2</div>
 
 <div class="count" id="count2">0</div>
 
-<div class="winner" id="crown2"></div>
+<div class="crown" id="crown2"></div>
 
 <div class="progress">
-<div class="progress-bar" id="bar2"></div>
+<div class="bar" id="bar2"></div>
 </div>
+
 </div>
 
 </div>
@@ -175,24 +200,58 @@ background:lime;
 
 let subs1=0;
 let subs2=0;
-let interval;
+let battleInterval;
+
+function setChannelLogo(name,id){
+
+let channel=name.toLowerCase().trim();
+
+const logos={
+
+mrbeast:
+"https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/MrBeast_logo.svg/512px-MrBeast_logo.svg.png",
+
+ronaldo:
+"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Cristiano_Ronaldo_2018.jpg/512px-Cristiano_Ronaldo_2018.jpg",
+
+cristianoronaldo:
+"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Cristiano_Ronaldo_2018.jpg/512px-Cristiano_Ronaldo_2018.jpg",
+
+tseries:
+"https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/T-Series_logo.svg/512px-T-Series_logo.svg.png",
+
+pewdiepie:
+"https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/PewDiePie_Logo.svg/512px-PewDiePie_Logo.svg.png"
+
+};
+
+if(logos[channel]){
+document.getElementById(id).src=logos[channel];
+}
+}
 
 function startBattle(){
 
-clearInterval(interval);
+clearInterval(battleInterval);
 
-document.getElementById("name1").innerText =
+let channel1=
 document.getElementById("name1Input").value || "Channel 1";
 
-document.getElementById("name2").innerText =
+let channel2=
 document.getElementById("name2Input").value || "Channel 2";
+
+document.getElementById("name1").innerText=channel1;
+document.getElementById("name2").innerText=channel2;
+
+setChannelLogo(channel1,"logo1");
+setChannelLogo(channel2,"logo2");
 
 subs1=Math.floor(Math.random()*50000000)+1000000;
 subs2=Math.floor(Math.random()*50000000)+1000000;
 
 updateUI();
 
-interval=setInterval(()=>{
+battleInterval=setInterval(()=>{
 
 subs1+=Math.floor(Math.random()*20)+1;
 subs2+=Math.floor(Math.random()*20)+1;
@@ -220,12 +279,15 @@ document.getElementById("bar1").style.width=p1+"%";
 document.getElementById("bar2").style.width=p2+"%";
 
 if(subs1>subs2){
+
 document.getElementById("crown1").innerHTML="👑";
 document.getElementById("crown2").innerHTML="";
-}
-else if(subs2>subs1){
+
+}else if(subs2>subs1){
+
 document.getElementById("crown2").innerHTML="👑";
 document.getElementById("crown1").innerHTML="";
+
 }
 }
 
