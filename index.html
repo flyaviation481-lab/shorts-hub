@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live YouTube Subscriber Battle</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { color: #ff0000; font-size: 2.5rem; margin-bottom: 10px; }
+        .subtitle { color: #aaa; margin-bottom: 30px; }
+        
+        /* Search Section */
+        .search-box {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 0 auto 40px auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .search-inputs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background: #2a2a2a;
+            color: white;
+            font-size: 1rem;
+        }
+        button {
+            background: #ff0000;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        button:hover { background: #cc0000; }
+
+        /* Battle Section */
+        .battle-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .creator-card {
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 15px;
+            width: 320px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            border: 1px solid #2d2d2d;
+        }
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            border: 3px solid #ff0000;
+            object-fit: cover;
+        }
+        .channel-name { font-size: 1.6rem; margin: 10px 0; color: #fff; }
+        .sub-count {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #00ffcc;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .vs {
+            font-size: 3rem;
+            color: #ffcc00;
+            font-style: italic;
+            font-weight: bold;
+        }
+        .loading-text { font-size: 1rem; color: #888; }
+    </style>
+</head>
+<body>
+
+    <h1>📊 Live Subscriber Battle</h1>
+    <p class="subtitle">Enter channel names or handles to start the competition</p>
+
+    <!-- Search UI -->
+    <div class="search-box">
+        <div class="search-inputs">
+            <input type="text" id="input1" placeholder="Channel 1 Name or Handle (e.g. @TSeries)">
+            <input type="text" id="input2" placeholder="Channel 2 Name or Handle (e.g. @MrBeast)">
+        </div>
+        <button onclick="startBattle()">Start Battle ⚔️</button>
+    </div>
+
+    <!-- Battle Display -->
+    <div class="battle-container">
+        <!-- Creator 1 -->
+        <div class="creator-card" id="creator1">
+            <img src="https://via.placeholder.com/100" class="avatar" id="logo1">
+            <h2 class="channel-name" id="name1">Channel 1</h2>
+            <div class="sub-count" id="count1">0</div>
+            <p class="loading-text">Subscribers</p>
+        </div>
+
+        <div class="vs">VS</div>
+
+        <!-- Creator 2 -->
+        <div class="creator-card" id="creator2">
+            <img src="https://via.placeholder.com/100" class="avatar" id="logo2">
+            <h2 class="channel-name" id="name2">Channel 2</h2>
+            <div class="sub-count" id="count2">0</div>
+            <p class="loading-text">Subscribers</p>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ APNI API KEY YAHAN DIEN
+        const API_KEY = 'YOUR_YOUTUBE_API_KEY_HERE'; 
+
+        // Default Channel IDs (Taake page khulte hi khali na dikhe)
+        let channel1Id = 'UCX6OQ3DkcsbYNE6H8uQQuVA'; // T-Series ID Example
+        let channel2Id = 'UCX6OQ3DkcsbYNE6H8uQQuVA'; 
+        let intervalId = null;
+
+        // Channel ID dhoondnay ka function (via Name/Handle)
+        async function getChannelId(query) {
+            if (!query.trim()) return null;
+            
+            // Agar user ne direct ID dali ho (UC...) to search skip karein
+            if (query.startsWith('UC') && query.length === 24) return query;
+
+            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=1`;
+            try {
+                let response = await fetch(url);
+                let data = await response.json();
+                if (data.items && data.items.length > 0) {
+                    return data.items[0].id.channelId;
+                }
+                return null;
+            } catch (e) {
+                console.error("Search Error:", e);
+                return null;
+            }
+        }
+
+        // Stats fetch karne ka function
+        async function getChannelStats(channelId, prefix) {
+            if (!channelId) return;
+            const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=${channelId}&key=${API_KEY}`;
+            try {
+                let response = await fetch(url);
+                let data = await response.json();
+                if (data.items && data.items.length > 0) {
+                    let channel = data.items[0];
+                    document.getElementById(`name${prefix}`).innerText = channel.snippet.title;
+                    document.getElementById(`logo${prefix}`).src = channel.snippet.thumbnails.default.url;
+                    document.getElementById(`count${prefix}`).innerText = Number(channel.statistics.subscriberCount).toLocaleString();
+                }
+            } catch (e) {
+                console.error("Stats Error:", e);
+            }
+        }
+
+        // Dono channels ko update karne ka main function
+        async function updateAllStats() {
+            await getChannelStats(channel1Id, '1');
+            await getChannelStats(channel2Id, '2');
+        }
+
+        // Button click hone par yeh chalega
+        async function startBattle() {
+            let q1 = document.getElementById('input1').value;
+            let q2 = document.getElementById('input2').value;
+
+            if(!q1 || !q2) {
+                alert("Please enter both channel names!");
+                return;
+            }
+
+            // Pehle button ko disable kar dein taake loading ho sake
+            document.querySelector('button').innerText = "Searching...";
+            
+            let id1 = await getChannelId(q1);
+            let id2 = await getChannelId(q2);
+
+            if (id1) channel1Id = id1;
+            if (id2) channel2Id = id2;
+
+            if (!id1 || !id2) {
+                alert("One or both channels not found! Try using exact handles (e.g., @MrBeast)");
+            }
+
+            // UI reset aur stats update
+            document.querySelector('button').innerText = "Start Battle ⚔️";
+            await updateAllStats();
+
+            // Purana loop clear kar ke naya loop start karen (Har 10 seconds baad)
+            clearInterval(intervalId);
+            intervalId = setInterval(updateAllStats, 10000);
+        }
+
+        // Page load hote hi agar default stats dikhani hon to:
+        // updateAllStats();
+    </script>
+</body>
+</html>
