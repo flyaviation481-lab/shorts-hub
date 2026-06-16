@@ -1,298 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live YouTube Subscriber Battle</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #fff;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 { color: #ff0000; font-size: 2.5rem; margin-bottom: 10px; }
-        .subtitle { color: #aaa; margin-bottom: 30px; }
-        
-        /* Search Section */
-        .search-box {
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 600px;
-            margin: 0 auto 40px auto;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .search-inputs {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        input {
-            flex: 1;
-            padding: 12px;
-            border-radius: 5px;
-            border: 1px solid #333;
-            background: #2a2a2a;
-            color: white;
-            font-size: 1rem;
-        }
-        button {
-            background: #ff0000;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.2s;
-            width: 100%;
-        }
-        button:hover { background: #cc0000; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subscriber Battle</title>
 
-        /* Battle Section */
-        .battle-container {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            flex-wrap: wrap;
-            align-items: center;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .creator-card {
-            background: #1e1e1e;
-            padding: 30px;
-            border-radius: 15px;
-            width: 320px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-            border: 1px solid #2d2d2d;
-        }
-        .avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin-bottom: 15px;
-            border: 3px solid #ff0000;
-            object-fit: cover;
-        }
-        .channel-name { font-size: 1.6rem; margin: 10px 0; color: #fff; }
-        .sub-count {
-            font-size: 3.5rem;
-            font-weight: bold;
-            color: #00ffcc;
-            margin: 15px 0;
-            font-family: monospace;
-        }
-        .vs {
-            font-size: 3rem;
-            color: #ffcc00;
-            font-style: italic;
-            font-weight: bold;
-        }
-        .loading-text { font-size: 1rem; color: #888; }
-    </style>
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#0f172a;
+color:white;
+text-align:center;
+padding:20px;
+}
+
+h1{
+font-size:2.3rem;
+margin-bottom:10px;
+color:#ff0000;
+}
+
+.search-box{
+max-width:700px;
+margin:auto;
+background:#1e293b;
+padding:20px;
+border-radius:15px;
+}
+
+.inputs{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+input{
+flex:1;
+padding:12px;
+border:none;
+border-radius:8px;
+font-size:16px;
+}
+
+button{
+width:100%;
+margin-top:10px;
+padding:12px;
+background:red;
+color:white;
+border:none;
+border-radius:8px;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.battle{
+display:flex;
+justify-content:center;
+align-items:center;
+gap:20px;
+flex-wrap:wrap;
+margin-top:30px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+width:300px;
+border-radius:15px;
+box-shadow:0 0 15px rgba(0,0,0,.4);
+}
+
+.avatar{
+width:100px;
+height:100px;
+border-radius:50%;
+border:3px solid red;
+margin-bottom:10px;
+}
+
+.name{
+font-size:24px;
+margin-bottom:10px;
+}
+
+.count{
+font-size:40px;
+font-weight:bold;
+color:#00ff99;
+}
+
+.vs{
+font-size:50px;
+font-weight:bold;
+color:gold;
+}
+
+.winner{
+font-size:35px;
+margin-top:10px;
+}
+
+.progress{
+height:15px;
+background:#333;
+border-radius:10px;
+overflow:hidden;
+margin-top:15px;
+}
+
+.progress-bar{
+height:100%;
+width:50%;
+background:lime;
+}
+</style>
 </head>
+
 <body>
 
-    <h1>📊 Live Subscriber Battle</h1>
-    <p class="subtitle">Paste Channel Link, Handle, or Name to start the video recording</p>
+<h1>🔥 Subscriber Battle</h1>
 
-    <div class="search-box">
-        <div class="search-inputs">
-            <input type="text" id="input1" placeholder="Channel 1 Link, Handle or Name">
-            <input type="text" id="input2" placeholder="Channel 2 Link, Handle or Name">
-        </div>
-        <button id="battleBtn" onclick="startBattle()">Start Battle ⚔️</button>
-    </div>
+<div class="search-box">
+<div class="inputs">
+<input type="text" id="name1Input" placeholder="Channel 1 Name">
+<input type="text" id="name2Input" placeholder="Channel 2 Name">
+</div>
 
-    <div class="battle-container">
-        <div class="creator-card" id="creator1">
-            <img src="https://i.pravatar.cc/150?img=56" class="avatar" id="logo1">
-            <h2 class="channel-name" id="name1">Channel 1</h2>
-            <div class="sub-count" id="count1">0</div>
-            <p class="loading-text">Subscribers (+1/3s)</p>
-        </div>
+<button onclick="startBattle()">Start Battle ⚔️</button>
+</div>
 
-        <div class="vs">VS</div>
+<div class="battle">
 
-        <div class="creator-card" id="creator2">
-            <img src="https://i.pravatar.cc/150?img=68" class="avatar" id="logo2">
-            <h2 class="channel-name" id="name2">Channel 2</h2>
-            <div class="sub-count" id="count2">0</div>
-            <p class="loading-text">Subscribers (+10/3s)</p>
-        </div>
-    </div>
+<div class="card">
+<img src="https://i.pravatar.cc/150?img=12" class="avatar">
 
-    <script>
-        // Implemented Working API Key
-        const API_KEY = 'AIzaSyD8sY8gsqkgX9c20tWywdWSMzFxniH0LP4'; 
+<div class="name" id="name1">Channel 1</div>
 
-        let channel1Id = 'UCX6OQ3DkcsbYNE6H8uQQuVA'; // MrBeast
-        let channel2Id = 'UCm78GgA7Z-r2XUor_V78V6w'; // Ronaldo
-        
-        let currentSubs1 = 0;
-        let currentSubs2 = 0;
-        
-        let apiIntervalId = null;
-        let animationIntervalId = null;
+<div class="count" id="count1">0</div>
 
-        // Smart Handle & URL Parser
-        function extractHandleOrId(input) {
-            let clean = input.trim();
-            if (!clean) return "";
+<div class="winner" id="crown1"></div>
 
-            if (clean.includes('youtube.com') || clean.includes('youtu.be')) {
-                if (clean.includes('/channel/')) {
-                    let parts = clean.split(/\/channel\//i);
-                    if (parts[1]) return parts[1].split(/[?#\/]/)[0];
-                }
-                if (clean.includes('/@')) {
-                    let parts = clean.split(/\/@/i);
-                    if (parts[1]) return '@' + parts[1].split(/[?#\/]/)[0];
-                }
-            }
-            return clean;
-        }
+<div class="progress">
+<div class="progress-bar" id="bar1"></div>
+</div>
+</div>
 
-        // Search API Request Handler
-        async function getChannelId(rawQuery) {
-            let query = extractHandleOrId(rawQuery);
-            if (!query) return null;
-            
-            if (query.startsWith('UC') && query.length === 24) {
-                return query;
-            }
+<div class="vs">VS</div>
 
-            let cleanQuery = query.toLowerCase().replace('@', '').trim();
-            
-            const popularChannels = {
-                'mrbeast': 'UCX6OQ3DkcsbYNE6H8uQQuVA',
-                'cristianoronaldo': 'UCm78GgA7Z-r2XUor_V78V6w',
-                'cristiano': 'UCm78GgA7Z-r2XUor_V78V6w',
-                'tseries': 'UCq-Fj5jknLsUf-MWSy4_brA',
-                'pewdiepie': 'UC-lHJZR3Gqxm24_Vd_AJ5Yw',
-                'setindia': 'UCpEhnqL0y41EpW2TvWAHD7Q'
-            };
+<div class="card">
+<img src="https://i.pravatar.cc/150?img=22" class="avatar">
 
-            if (popularChannels[cleanQuery]) return popularChannels[cleanQuery];
+<div class="name" id="name2">Channel 2</div>
 
-            let searchQuery = query.startsWith('@') ? query : '@' + query;
-            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(searchQuery)}&key=${API_KEY}&maxResults=1`;
-            
-            try {
-                let response = await fetch(url);
-                if (!response.ok) return null; // API Blocked Check
-                let data = await response.json();
-                if (data.items && data.items.length > 0) {
-                    return data.items[0].id.channelId;
-                }
-                return null;
-            } catch (e) {
-                console.error(e);
-                return null;
-            }
-        }
+<div class="count" id="count2">0</div>
 
-        // Fetch Stats
-        async function fetchRealData() {
-            if (!channel1Id || !channel2Id) return;
-            
-            const url1 = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=${channel1Id}&key=${API_KEY}`;
-            const url2 = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=${channel2Id}&key=${API_KEY}`;
-            
-            try {
-                let res1 = await fetch(url1);
-                if (res1.ok) {
-                    let data1 = await res1.json();
-                    if (data1.items && data1.items.length > 0) {
-                        let ch1 = data1.items[0];
-                        document.getElementById('name1').innerText = ch1.snippet.title;
-                        document.getElementById('logo1').src = ch1.snippet.thumbnails.default.url;
-                        if (currentSubs1 === 0) currentSubs1 = Number(ch1.statistics.subscriberCount);
-                    }
-                }
+<div class="winner" id="crown2"></div>
 
-                let res2 = await fetch(url2);
-                if (res2.ok) {
-                    let data2 = await res2.json();
-                    if (data2.items && data2.items.length > 0) {
-                        let ch2 = data2.items[0];
-                        document.getElementById('name2').innerText = ch2.snippet.title;
-                        document.getElementById('logo2').src = ch2.snippet.thumbnails.default.url;
-                        if (currentSubs2 === 0) currentSubs2 = Number(ch2.statistics.subscriberCount);
-                    }
-                }
-                
-                // Update display UI
-                document.getElementById('count1').innerText = currentSubs1.toLocaleString();
-                document.getElementById('count2').innerText = currentSubs2.toLocaleString();
+<div class="progress">
+<div class="progress-bar" id="bar2"></div>
+</div>
+</div>
 
-            } catch (e) {
-                console.error(e);
-            }
-        }
+</div>
 
-        // ⏱️ Speed Counter Set to Exactly 3 Seconds
-        function startCustomCounting() {
-            clearInterval(animationIntervalId);
-            
-            animationIntervalId = setInterval(() => {
-                if (currentSubs1 > 0 && currentSubs2 > 0) {
-                    currentSubs1 += 1;   // Channel 1 takes +1
-                    currentSubs2 += 10;  // Channel 2 takes +10
+<script>
 
-                    document.getElementById('count1').innerText = currentSubs1.toLocaleString();
-                    document.getElementById('count2').innerText = currentSubs2.toLocaleString();
-                }
-            }, 3000); // 3000ms = 3 Seconds
-        }
+let subs1=0;
+let subs2=0;
+let interval;
 
-        // Action Trigger
-        async function startBattle() {
-            let q1 = document.getElementById('input1').value;
-            let q2 = document.getElementById('input2').value;
+function startBattle(){
 
-            if (!q1 || !q2) {
-                alert("Please enter both fields!");
-                return;
-            }
+clearInterval(interval);
 
-            document.getElementById('battleBtn').innerText = "Processing Channels...";
-            
-            let id1 = await getChannelId(q1);
-            let id2 = await getChannelId(q2);
+document.getElementById("name1").innerText =
+document.getElementById("name1Input").value || "Channel 1";
 
-            if (id1 && id2) {
-                channel1Id = id1;
-                channel2Id = id2;
-                currentSubs1 = 0;
-                currentSubs2 = 0;
-                await fetchRealData();
-                startCustomCounting();
-            } else {
-                // Safe Fallover: Agar API key select na ho, to page freeze na ho aur animation chal pare!
-                document.getElementById('name1').innerText = q1.replace('@', '');
-                document.getElementById('name2').innerText = q2.replace('@', '');
-                if(currentSubs1 === 0) currentSubs1 = 312000000;
-                if(currentSubs2 === 0) currentSubs2 = 68000000;
-                startCustomCounting();
-            }
+document.getElementById("name2").innerText =
+document.getElementById("name2Input").value || "Channel 2";
 
-            document.getElementById('battleBtn').innerText = "Start Battle ⚔️";
-        }
+subs1=Math.floor(Math.random()*50000000)+1000000;
+subs2=Math.floor(Math.random()*50000000)+1000000;
 
-        async function init() {
-            await fetchRealData();
-            startCustomCounting();
-            clearInterval(apiIntervalId);
-            apiIntervalId = setInterval(fetchRealData, 60000);
-        }
+updateUI();
 
-        init();
-    </script>
+interval=setInterval(()=>{
+
+subs1+=Math.floor(Math.random()*20)+1;
+subs2+=Math.floor(Math.random()*20)+1;
+
+updateUI();
+
+},1000);
+
+}
+
+function updateUI(){
+
+document.getElementById("count1").innerText=
+subs1.toLocaleString();
+
+document.getElementById("count2").innerText=
+subs2.toLocaleString();
+
+let total=subs1+subs2;
+
+let p1=(subs1/total)*100;
+let p2=(subs2/total)*100;
+
+document.getElementById("bar1").style.width=p1+"%";
+document.getElementById("bar2").style.width=p2+"%";
+
+if(subs1>subs2){
+document.getElementById("crown1").innerHTML="👑";
+document.getElementById("crown2").innerHTML="";
+}
+else if(subs2>subs1){
+document.getElementById("crown2").innerHTML="👑";
+document.getElementById("crown1").innerHTML="";
+}
+}
+
+</script>
+
 </body>
 </html>
