@@ -1,295 +1,176 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Subscriber Battle</title>
+<title>MrBeast vs Ronaldo Live Subscriber Battle</title>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
-}
-
 body{
-background:#0f172a;
-color:white;
-text-align:center;
-padding:20px;
+    margin:0;
+    background:#0f0f0f;
+    color:#fff;
+    font-family:Arial,sans-serif;
+    text-align:center;
 }
 
 h1{
-font-size:2.5rem;
-color:#ff0000;
-margin-bottom:10px;
+    margin-top:20px;
+    color:#ff3b3b;
 }
 
-.subtitle{
-color:#aaa;
-margin-bottom:20px;
-}
-
-.search-box{
-background:#1e293b;
-padding:20px;
-border-radius:15px;
-max-width:700px;
-margin:auto;
-}
-
-.inputs{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-}
-
-input{
-flex:1;
-padding:12px;
-border:none;
-border-radius:8px;
-font-size:16px;
-}
-
-button{
-width:100%;
-margin-top:10px;
-padding:12px;
-border:none;
-border-radius:8px;
-background:#ff0000;
-color:white;
-font-size:18px;
-font-weight:bold;
-cursor:pointer;
-}
-
-button:hover{
-background:#cc0000;
-}
-
-.battle{
-display:flex;
-justify-content:center;
-align-items:center;
-gap:20px;
-flex-wrap:wrap;
-margin-top:30px;
+.container{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:40px;
+    flex-wrap:wrap;
+    margin-top:50px;
 }
 
 .card{
-background:#1e293b;
-width:320px;
-padding:20px;
-border-radius:15px;
-box-shadow:0 0 15px rgba(0,0,0,.4);
+    width:350px;
+    background:#1b1b1b;
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 0 20px rgba(255,255,255,.08);
 }
 
 .avatar{
-width:120px;
-height:120px;
-border-radius:50%;
-border:4px solid red;
-object-fit:cover;
-margin-bottom:10px;
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    border:3px solid #ff0000;
 }
 
 .name{
-font-size:24px;
-margin-bottom:10px;
+    font-size:30px;
+    margin-top:15px;
+    font-weight:bold;
 }
 
 .count{
-font-size:42px;
-font-weight:bold;
-color:#00ff99;
-font-family:monospace;
-}
-
-.crown{
-font-size:40px;
-height:50px;
-}
-
-.progress{
-height:15px;
-background:#333;
-border-radius:10px;
-overflow:hidden;
-margin-top:15px;
-}
-
-.bar{
-height:100%;
-width:50%;
-background:lime;
+    font-size:60px;
+    font-weight:900;
+    color:#00ff99;
+    margin-top:20px;
+    font-family:monospace;
 }
 
 .vs{
-font-size:50px;
-font-weight:bold;
-color:gold;
-}
-
-@media(max-width:768px){
-.vs{
-width:100%;
-}
+    font-size:70px;
+    color:gold;
+    font-weight:bold;
 }
 </style>
+
 </head>
+
 <body>
 
-<h1>🔥 Subscriber Battle</h1>
-<p class="subtitle">Enter Channel Names & Start Battle</p>
+<h1>🔥 LIVE SUBSCRIBER BATTLE 🔥</h1>
 
-<div class="search-box">
-<div class="inputs">
-<input type="text" id="name1Input" placeholder="Channel 1">
-<input type="text" id="name2Input" placeholder="Channel 2">
-</div>
-
-<button onclick="startBattle()">Start Battle ⚔️</button>
-</div>
-
-<div class="battle">
+<div class="container">
 
 <div class="card">
-
-<img id="logo1"
-class="avatar"
-src="https://i.pravatar.cc/150?img=12">
-
-<div class="name" id="name1">Channel 1</div>
-
-<div class="count" id="count1">0</div>
-
-<div class="crown" id="crown1"></div>
-
-<div class="progress">
-<div class="bar" id="bar1"></div>
-</div>
-
+    <img id="logo1" class="avatar">
+    <div id="name1" class="name">MrBeast</div>
+    <div id="count1" class="count">Loading...</div>
 </div>
 
 <div class="vs">VS</div>
 
 <div class="card">
-
-<img id="logo2"
-class="avatar"
-src="https://i.pravatar.cc/150?img=22">
-
-<div class="name" id="name2">Channel 2</div>
-
-<div class="count" id="count2">0</div>
-
-<div class="crown" id="crown2"></div>
-
-<div class="progress">
-<div class="bar" id="bar2"></div>
-</div>
-
+    <img id="logo2" class="avatar">
+    <div id="name2" class="name">Cristiano Ronaldo</div>
+    <div id="count2" class="count">Loading...</div>
 </div>
 
 </div>
 
 <script>
 
-let subs1=0;
-let subs2=0;
-let battleInterval;
+const API_KEY = "YOUR_API_KEY";
 
-function setChannelLogo(name,id){
+const CHANNEL_1 = "UCX6OQ3DkcsbYNE6H8uQQuVA"; // MrBeast
+const CHANNEL_2 = "UCm78GgA7Z-r2XUor_V78V6w"; // Ronaldo
 
-let channel=name.toLowerCase().trim();
+let display1 = 0;
+let display2 = 0;
 
-const logos={
+async function getChannelData(channelId){
 
-mrbeast:
-"https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/MrBeast_logo.svg/512px-MrBeast_logo.svg.png",
+    const url =
+    `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${API_KEY}`;
 
-ronaldo:
-"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Cristiano_Ronaldo_2018.jpg/512px-Cristiano_Ronaldo_2018.jpg",
+    const res = await fetch(url);
+    const data = await res.json();
 
-cristianoronaldo:
-"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Cristiano_Ronaldo_2018.jpg/512px-Cristiano_Ronaldo_2018.jpg",
-
-tseries:
-"https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/T-Series_logo.svg/512px-T-Series_logo.svg.png",
-
-pewdiepie:
-"https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/PewDiePie_Logo.svg/512px-PewDiePie_Logo.svg.png"
-
-};
-
-if(logos[channel]){
-document.getElementById(id).src=logos[channel];
-}
+    return data.items[0];
 }
 
-function startBattle(){
+function animateValue(element,target,current){
 
-clearInterval(battleInterval);
+    const step = Math.ceil((target-current)/10);
 
-let channel1=
-document.getElementById("name1Input").value || "Channel 1";
+    if(current < target){
+        current += step;
+    }else{
+        current = target;
+    }
 
-let channel2=
-document.getElementById("name2Input").value || "Channel 2";
+    element.innerText = current.toLocaleString();
 
-document.getElementById("name1").innerText=channel1;
-document.getElementById("name2").innerText=channel2;
-
-setChannelLogo(channel1,"logo1");
-setChannelLogo(channel2,"logo2");
-
-subs1=Math.floor(Math.random()*50000000)+1000000;
-subs2=Math.floor(Math.random()*50000000)+1000000;
-
-updateUI();
-
-battleInterval=setInterval(()=>{
-
-subs1+=Math.floor(Math.random()*20)+1;
-subs2+=Math.floor(Math.random()*20)+1;
-
-updateUI();
-
-},1000);
-
+    return current;
 }
 
-function updateUI(){
+async function updateSubscribers(){
 
-document.getElementById("count1").innerText=
-subs1.toLocaleString();
+    try{
 
-document.getElementById("count2").innerText=
-subs2.toLocaleString();
+        const ch1 = await getChannelData(CHANNEL_1);
+        const ch2 = await getChannelData(CHANNEL_2);
 
-let total=subs1+subs2;
+        document.getElementById("name1").innerText =
+        ch1.snippet.title;
 
-let p1=(subs1/total)*100;
-let p2=(subs2/total)*100;
+        document.getElementById("name2").innerText =
+        ch2.snippet.title;
 
-document.getElementById("bar1").style.width=p1+"%";
-document.getElementById("bar2").style.width=p2+"%";
+        document.getElementById("logo1").src =
+        ch1.snippet.thumbnails.high.url;
 
-if(subs1>subs2){
+        document.getElementById("logo2").src =
+        ch2.snippet.thumbnails.high.url;
 
-document.getElementById("crown1").innerHTML="👑";
-document.getElementById("crown2").innerHTML="";
+        const target1 =
+        Number(ch1.statistics.subscriberCount);
 
-}else if(subs2>subs1){
+        const target2 =
+        Number(ch2.statistics.subscriberCount);
 
-document.getElementById("crown2").innerHTML="👑";
-document.getElementById("crown1").innerHTML="";
+        display1 = animateValue(
+            document.getElementById("count1"),
+            target1,
+            display1
+        );
 
+        display2 = animateValue(
+            document.getElementById("count2"),
+            target2,
+            display2
+        );
+
+    }catch(error){
+        console.log(error);
+    }
 }
-}
+
+updateSubscribers();
+
+/* refresh every 10 sec */
+setInterval(updateSubscribers,10000);
 
 </script>
 
