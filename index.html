@@ -142,22 +142,48 @@
 
         // Channel ID dhoondnay ka function (via Name/Handle)
         async function getChannelId(query) {
-            if (!query.trim()) return null;
-            
-            // Agar user ne direct ID dali ho (UC...) to search skip karein
-            if (query.startsWith('UC') && query.length === 24) return query;
+              if (!query.trim()) return null;
+    
+    // 1. Agar direct Channel ID dali ho (e.g., UCxX9q6q...)
+    if (query.startsWith('UC') && query.length === 24) {
+        return query;
+    }
 
-            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=1`;
-            try {
-                let response = await fetch(url);
-                let data = await response.json();
-                if (data.items && data.items.length > 0) {
-                    return data.items[0].id.channelId;
-                }
-                return null;
-            } catch (e) {
-                console.error("Search Error:", e);
-                return null;
+    // 2. Mashhoor channels ki IDs direct map kar di hain taake API par load na aaye
+    let cleanQuery = query.toLowerCase().replace('@', '').trim();
+    const popularChannels = {
+        'mrbeast': 'UCX6OQ3DkcsbYNE6H8uQQuVA',
+        'cristianoronaldo': 'UCm78GgA7Z-r2XUor_V78V6w',
+        'tseries': 'UCq-Fj5jknLsUf-MWSy4_brA',
+        'pewdiepie': 'UC-lHJZR3Gqxm24_Vd_AJ5Yw',
+        'setindia': 'UCpEhnqL0y41EpW2TvWAHD7Q'
+    };
+
+    if (popularChannels[cleanQuery]) {
+        return popularChannels[cleanQuery];
+    }
+
+    // 3. Agar koi naya channel ho to YouTube Search fallback use karein
+    let searchQuery = query.startsWith('@') ? query.substring(1) : query;
+    const url = https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(searchQuery)}&key=${API_KEY}&maxResults=1;
+    
+    try {
+        let response = await fetch(url);
+        let data = await response.json();
+        
+        if (data.error) {
+            console.error("Google API Error:", data.error.message);
+            alert("API Error: " + data.error.message);
+            return null;
+        }
+
+        if (data.items && data.items.length > 0) {
+            return data.items[0].id.channelId;
+        }
+        return null;
+    } catch (e) {
+        console.error("Search Network Error:", e);
+        return null;
             }
         }
 
