@@ -245,13 +245,13 @@
             
             animationIntervalId = setInterval(() => {
                 if (currentSubs1 > 0 && currentSubs2 > 0) {
-                    currentSubs1 += 1;   // Slow (+1)
+                    currentSubs1 += 5;   // Slow (+5)
                     currentSubs2 += 10;  // Fast (+10)
 
                     document.getElementById('count1').innerText = currentSubs1.toLocaleString();
                     document.getElementById('count2').innerText = currentSubs2.toLocaleString();
                 }
-            }, 10000); 
+            }, 3000); 
         }
 
         // Main Action Button Trigger
