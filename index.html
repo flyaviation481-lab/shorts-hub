@@ -103,10 +103,10 @@
 
     <div class="search-box">
         <div class="search-inputs">
-            <input type="text" id="input1" placeholder="Channel 1 Link or Handle">
-            <input type="text" id="input2" placeholder="Channel 2 Link or Handle">
+            <input type="text" id="input1" placeholder="Channel 1 Link, Handle or Name">
+            <input type="text" id="input2" placeholder="Channel 2 Link, Handle or Name">
         </div>
-        <button onclick="startBattle()">Start Battle ⚔️</button>
+        <button id="battleBtn" onclick="startBattle()">Start Battle ⚔️</button>
     </div>
 
     <div class="battle-container">
@@ -128,6 +128,7 @@
     </div>
 
     <script>
+        // Working API Key is Hardcoded Here 🛠️
         const API_KEY = 'AIzaSyD8sY8gsqkgX9c20tWywdWSMzFxniH0LP4'; 
 
         let channel1Id = 'UCX6OQ3DkcsbYNE6H8uQQuVA'; // Default MrBeast
@@ -139,31 +140,29 @@
         let apiIntervalId = null;
         let animationIntervalId = null;
 
-        // URL parsing logic - Cleaned and Re-tested 🛠️
+        // Smart URL/Handle parsing logic 🛠️
         function extractHandleOrId(input) {
-            let cleanInput = input.trim();
+            let cleanInput = input.trim().toLowerCase();
             
-            if (cleanInput.includes('youtube.com/') || cleanInput.includes('youtu.be/')) {
-                // Agar URL mein direct channel ID ho (/channel/UC...)
+            // Agar link bina http ke bhi shuru ho (e.g. www.youtube.com/@mrbeast)
+            if (cleanInput.includes('youtube.com') || cleanInput.includes('youtu.be')) {
                 if (cleanInput.includes('/channel/')) {
-                    let parts = cleanInput.split('/channel/');
+                    let parts = input.trim().split(/\/channel\//i);
                     if (parts[1]) return parts[1].split(/[?#\/]/)[0];
                 }
-                // Agar URL mein handle ho (/@username)
                 if (cleanInput.includes('/@')) {
-                    let parts = cleanInput.split('/@');
+                    let parts = input.trim().split(/\/@/i);
                     if (parts[1]) return '@' + parts[1].split(/[?#\/]/)[0];
                 }
             }
-            return cleanInput;
+            return input.trim();
         }
 
-        // Channel ID fetch karne ka logic
+        // Channel ID fetch logic with advanced fallbacks
         async function getChannelId(rawQuery) {
             let query = extractHandleOrId(rawQuery);
             if (!query) return null;
             
-            // Check if it's already a valid 24 character Channel ID
             if (query.startsWith('UC') && query.length === 24) {
                 return query;
             }
@@ -172,6 +171,7 @@
             const popularChannels = {
                 'mrbeast': 'UCX6OQ3DkcsbYNE6H8uQQuVA',
                 'cristianoronaldo': 'UCm78GgA7Z-r2XUor_V78V6w',
+                'cristiano': 'UCm78GgA7Z-r2XUor_V78V6w',
                 'tseries': 'UCq-Fj5jknLsUf-MWSy4_brA',
                 'pewdiepie': 'UC-lHJZR3Gqxm24_Vd_AJ5Yw',
                 'setindia': 'UCpEhnqL0y41EpW2TvWAHD7Q'
@@ -179,7 +179,6 @@
 
             if (popularChannels[cleanQuery]) return popularChannels[cleanQuery];
 
-            // Formulate proper query for Search API
             let searchQuery = query.startsWith('@') ? query : '@' + query;
             const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(searchQuery)}&key=${API_KEY}&maxResults=1`;
             
@@ -190,7 +189,7 @@
                     return data.items[0].id.channelId;
                 }
                 
-                // Secondary Fallback search
+                // Fallback search
                 const fallbackUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=1`;
                 let fallbackRes = await fetch(fallbackUrl);
                 let fallbackData = await fallbackRes.json();
@@ -199,12 +198,12 @@
                 }
                 return null;
             } catch (e) {
-                console.error("Search API Network Error:", e);
+                console.error("Search API Error:", e);
                 return null;
             }
         }
 
-        // Fetching Real Stats & Images
+        // Fetch Stats
         async function fetchRealData() {
             if (!channel1Id || !channel2Id) return;
             
@@ -240,22 +239,22 @@
             }
         }
 
-        // Fixed Interval Counting Loop ⏱️
+        // Fixed 10s Interval Animation Counter Loop ⏱️
         function startCustomCounting() {
             clearInterval(animationIntervalId);
             
             animationIntervalId = setInterval(() => {
                 if (currentSubs1 > 0 && currentSubs2 > 0) {
-                    currentSubs1 += 1;   // Slow Counter (+1)
-                    currentSubs2 += 10;  // Fast Counter (+10)
+                    currentSubs1 += 1;   // Slow (+1)
+                    currentSubs2 += 10;  // Fast (+10)
 
                     document.getElementById('count1').innerText = currentSubs1.toLocaleString();
                     document.getElementById('count2').innerText = currentSubs2.toLocaleString();
                 }
-            }, 10000); // Trigger every 10 seconds perfectly
+            }, 10000); 
         }
 
-        // Trigger Button Logic
+        // Main Action Button Trigger
         async function startBattle() {
             let q1 = document.getElementById('input1').value;
             let q2 = document.getElementById('input2').value;
@@ -265,7 +264,7 @@
                 return;
             }
 
-            document.querySelector('button').innerText = "Processing Channels...";
+            document.getElementById('battleBtn').innerText = "Processing Channels...";
             
             let id1 = await getChannelId(q1);
             let id2 = await getChannelId(q2);
@@ -279,19 +278,23 @@
                 await fetchRealData();
                 startCustomCounting();
             } else {
-                alert("Could not process these links/names. Please paste valid YouTube URLs or handles.");
+                alert("Could not process these links/names. Making a default animation bypass...");
+                // Network issue bypass fallback for clean video rendering
+                if(currentSubs1 === 0) currentSubs1 = 100000;
+                if(currentSubs2 === 0) currentSubs2 = 500000;
+                startCustomCounting();
             }
 
-            document.querySelector('button').innerText = "Start Battle ⚔️";
+            document.getElementById('battleBtn').innerText = "Start Battle ⚔️";
         }
 
-        // Auto initialization on load
+        // Init on page bootup
         async function init() {
             await fetchRealData();
             startCustomCounting();
             
             clearInterval(apiIntervalId);
-            apiIntervalId = setInterval(fetchRealData, 60000); // Silent sync every 1 minute
+            apiIntervalId = setInterval(fetchRealData, 60000);
         }
 
         init();
