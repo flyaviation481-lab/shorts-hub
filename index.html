@@ -99,152 +99,202 @@
 <body>
 
     <h1>📊 Live Subscriber Battle</h1>
-    <p class="subtitle">Enter channel names or handles to start the competition</p>
+    <p class="subtitle">Paste Channel Link, Handle, or Name to start the video recording</p>
 
-    <!-- Search UI -->
     <div class="search-box">
         <div class="search-inputs">
-            <input type="text" id="input1" placeholder="Channel 1 Name or Handle (e.g. @TSeries)">
-            <input type="text" id="input2" placeholder="Channel 2 Name or Handle (e.g. @MrBeast)">
+            <input type="text" id="input1" placeholder="Channel 1 Link or Handle">
+            <input type="text" id="input2" placeholder="Channel 2 Link or Handle">
         </div>
         <button onclick="startBattle()">Start Battle ⚔️</button>
     </div>
 
-    <!-- Battle Display -->
     <div class="battle-container">
-        <!-- Creator 1 -->
         <div class="creator-card" id="creator1">
             <img src="https://via.placeholder.com/100" class="avatar" id="logo1">
             <h2 class="channel-name" id="name1">Channel 1</h2>
             <div class="sub-count" id="count1">0</div>
-            <p class="loading-text">Subscribers</p>
+            <p class="loading-text">Subscribers (+1/10s)</p>
         </div>
 
         <div class="vs">VS</div>
 
-        <!-- Creator 2 -->
         <div class="creator-card" id="creator2">
             <img src="https://via.placeholder.com/100" class="avatar" id="logo2">
             <h2 class="channel-name" id="name2">Channel 2</h2>
             <div class="sub-count" id="count2">0</div>
-            <p class="loading-text">Subscribers</p>
+            <p class="loading-text">Subscribers (+10/10s)</p>
         </div>
     </div>
 
     <script>
-        // ⚠️ APNI API KEY YAHAN DIEN
         const API_KEY = 'AIzaSyD8sY8gsqkgX9c20tWywdWSMzFxniH0LP4'; 
 
-        // Default Channel IDs (Taake page khulte hi khali na dikhe)
-        let channel1Id = 'UCX6OQ3DkcsbYNE6H8uQQuVA'; // T-Series ID Example
-        let channel2Id = 'UCX6OQ3DkcsbYNE6H8uQQuVA'; 
-        let intervalId = null;
-
-        // Channel ID dhoondnay ka function (via Name/Handle)
-        async function getChannelId(query) {
-              if (!query.trim()) return null;
-    
-    // 1. Agar direct Channel ID dali ho (e.g., UCxX9q6q...)
-    if (query.startsWith('UC') && query.length === 24) {
-        return query;
-    }
-
-    // 2. Mashhoor channels ki IDs direct map kar di hain taake API par load na aaye
-    let cleanQuery = query.toLowerCase().replace('@', '').trim();
-    const popularChannels = {
-        'mrbeast': 'UCX6OQ3DkcsbYNE6H8uQQuVA',
-        'cristianoronaldo': 'UCm78GgA7Z-r2XUor_V78V6w',
-        'tseries': 'UCq-Fj5jknLsUf-MWSy4_brA',
-        'pewdiepie': 'UC-lHJZR3Gqxm24_Vd_AJ5Yw',
-        'setindia': 'UCpEhnqL0y41EpW2TvWAHD7Q'
-    };
-
-    if (popularChannels[cleanQuery]) {
-        return popularChannels[cleanQuery];
-    }
-
-    // 3. Agar koi naya channel ho to YouTube Search fallback use karein
-    let searchQuery = query.startsWith('@') ? query.substring(1) : query;
-    const url = https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(searchQuery)}&key=${API_KEY}&maxResults=1;
-    
-    try {
-        let response = await fetch(url);
-        let data = await response.json();
+        let channel1Id = 'UCX6OQ3DkcsbYNE6H8uQQuVA'; // Default MrBeast
+        let channel2Id = 'UCm78GgA7Z-r2XUor_V78V6w'; // Default Ronaldo
         
-        if (data.error) {
-            console.error("Google API Error:", data.error.message);
-            alert("API Error: " + data.error.message);
-            return null;
-        }
+        let currentSubs1 = 0;
+        let currentSubs2 = 0;
+        
+        let apiIntervalId = null;
+        let animationIntervalId = null;
 
-        if (data.items && data.items.length > 0) {
-            return data.items[0].id.channelId;
-        }
-        return null;
-    } catch (e) {
-        console.error("Search Network Error:", e);
-        return null;
+        // URL parsing logic - Cleaned and Re-tested 🛠️
+        function extractHandleOrId(input) {
+            let cleanInput = input.trim();
+            
+            if (cleanInput.includes('youtube.com/') || cleanInput.includes('youtu.be/')) {
+                // Agar URL mein direct channel ID ho (/channel/UC...)
+                if (cleanInput.includes('/channel/')) {
+                    let parts = cleanInput.split('/channel/');
+                    if (parts[1]) return parts[1].split(/[?#\/]/)[0];
+                }
+                // Agar URL mein handle ho (/@username)
+                if (cleanInput.includes('/@')) {
+                    let parts = cleanInput.split('/@');
+                    if (parts[1]) return '@' + parts[1].split(/[?#\/]/)[0];
+                }
             }
+            return cleanInput;
         }
 
-        // Stats fetch karne ka function
-        async function getChannelStats(channelId, prefix) {
-            if (!channelId) return;
-            const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=${channelId}&key=${API_KEY}`;
+        // Channel ID fetch karne ka logic
+        async function getChannelId(rawQuery) {
+            let query = extractHandleOrId(rawQuery);
+            if (!query) return null;
+            
+            // Check if it's already a valid 24 character Channel ID
+            if (query.startsWith('UC') && query.length === 24) {
+                return query;
+            }
+
+            let cleanQuery = query.toLowerCase().replace('@', '').trim();
+            const popularChannels = {
+                'mrbeast': 'UCX6OQ3DkcsbYNE6H8uQQuVA',
+                'cristianoronaldo': 'UCm78GgA7Z-r2XUor_V78V6w',
+                'tseries': 'UCq-Fj5jknLsUf-MWSy4_brA',
+                'pewdiepie': 'UC-lHJZR3Gqxm24_Vd_AJ5Yw',
+                'setindia': 'UCpEhnqL0y41EpW2TvWAHD7Q'
+            };
+
+            if (popularChannels[cleanQuery]) return popularChannels[cleanQuery];
+
+            // Formulate proper query for Search API
+            let searchQuery = query.startsWith('@') ? query : '@' + query;
+            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(searchQuery)}&key=${API_KEY}&maxResults=1`;
+            
             try {
                 let response = await fetch(url);
                 let data = await response.json();
                 if (data.items && data.items.length > 0) {
-                    let channel = data.items[0];
-                    document.getElementById(`name${prefix}`).innerText = channel.snippet.title;
-                    document.getElementById(`logo${prefix}`).src = channel.snippet.thumbnails.default.url;
-                    document.getElementById(`count${prefix}`).innerText = Number(channel.statistics.subscriberCount).toLocaleString();
+                    return data.items[0].id.channelId;
                 }
+                
+                // Secondary Fallback search
+                const fallbackUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=1`;
+                let fallbackRes = await fetch(fallbackUrl);
+                let fallbackData = await fallbackRes.json();
+                if (fallbackData.items && fallbackData.items.length > 0) {
+                    return fallbackData.items[0].id.channelId;
+                }
+                return null;
             } catch (e) {
-                console.error("Stats Error:", e);
+                console.error("Search API Network Error:", e);
+                return null;
             }
         }
 
-        // Dono channels ko update karne ka main function
-        async function updateAllStats() {
-            await getChannelStats(channel1Id, '1');
-            await getChannelStats(channel2Id, '2');
+        // Fetching Real Stats & Images
+        async function fetchRealData() {
+            if (!channel1Id || !channel2Id) return;
+            
+            const url1 = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=${channel1Id}&key=${API_KEY}`;
+            const url2 = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=${channel2Id}&key=${API_KEY}`;
+            
+            try {
+                let res1 = await fetch(url1);
+                let data1 = await res1.json();
+                if (data1.items && data1.items.length > 0) {
+                    let ch1 = data1.items[0];
+                    document.getElementById('name1').innerText = ch1.snippet.title;
+                    document.getElementById('logo1').src = ch1.snippet.thumbnails.default.url;
+                    if (currentSubs1 === 0) {
+                        currentSubs1 = Number(ch1.statistics.subscriberCount);
+                        document.getElementById('count1').innerText = currentSubs1.toLocaleString();
+                    }
+                }
+
+                let res2 = await fetch(url2);
+                let data2 = await res2.json();
+                if (data2.items && data2.items.length > 0) {
+                    let ch2 = data2.items[0];
+                    document.getElementById('name2').innerText = ch2.snippet.title;
+                    document.getElementById('logo2').src = ch2.snippet.thumbnails.default.url;
+                    if (currentSubs2 === 0) {
+                        currentSubs2 = Number(ch2.statistics.subscriberCount);
+                        document.getElementById('count2').innerText = currentSubs2.toLocaleString();
+                    }
+                }
+            } catch (e) {
+                console.error("Stats Fetch Error:", e);
+            }
         }
 
-        // Button click hone par yeh chalega
+        // Fixed Interval Counting Loop ⏱️
+        function startCustomCounting() {
+            clearInterval(animationIntervalId);
+            
+            animationIntervalId = setInterval(() => {
+                if (currentSubs1 > 0 && currentSubs2 > 0) {
+                    currentSubs1 += 1;   // Slow Counter (+1)
+                    currentSubs2 += 10;  // Fast Counter (+10)
+
+                    document.getElementById('count1').innerText = currentSubs1.toLocaleString();
+                    document.getElementById('count2').innerText = currentSubs2.toLocaleString();
+                }
+            }, 10000); // Trigger every 10 seconds perfectly
+        }
+
+        // Trigger Button Logic
         async function startBattle() {
             let q1 = document.getElementById('input1').value;
             let q2 = document.getElementById('input2').value;
 
-            if(!q1 || !q2) {
-                alert("Please enter both channel names!");
+            if (!q1 || !q2) {
+                alert("Please enter both channel details!");
                 return;
             }
 
-            // Pehle button ko disable kar dein taake loading ho sake
-            document.querySelector('button').innerText = "Searching...";
+            document.querySelector('button').innerText = "Processing Channels...";
             
             let id1 = await getChannelId(q1);
             let id2 = await getChannelId(q2);
 
-            if (id1) channel1Id = id1;
-            if (id2) channel2Id = id2;
-
-            if (!id1 || !id2) {
-                alert("One or both channels not found! Try using exact handles (e.g., @MrBeast)");
+            if (id1 && id2) {
+                channel1Id = id1;
+                channel2Id = id2;
+                currentSubs1 = 0;
+                currentSubs2 = 0;
+                
+                await fetchRealData();
+                startCustomCounting();
+            } else {
+                alert("Could not process these links/names. Please paste valid YouTube URLs or handles.");
             }
 
-            // UI reset aur stats update
             document.querySelector('button').innerText = "Start Battle ⚔️";
-            await updateAllStats();
-
-            // Purana loop clear kar ke naya loop start karen (Har 10 seconds baad)
-            clearInterval(intervalId);
-            intervalId = setInterval(updateAllStats, 10000);
         }
 
-        // Page load hote hi agar default stats dikhani hon to:
-        // updateAllStats();
+        // Auto initialization on load
+        async function init() {
+            await fetchRealData();
+            startCustomCounting();
+            
+            clearInterval(apiIntervalId);
+            apiIntervalId = setInterval(fetchRealData, 60000); // Silent sync every 1 minute
+        }
+
+        init();
     </script>
 </body>
 </html>
